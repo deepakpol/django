@@ -443,3 +443,35 @@ class TestUtilsText(SimpleTestCase):
         )
         with override("fr"):
             self.assertEqual("Ajout de article «\xa0My first try\xa0».", s)
+
+
+class SlugifyUrlSafeSlugTests(unittest.TestCase):
+    def test_spaces_become_single_hyphens_and_text_is_lowercased(self):
+        """
+        Test that spaces are converted to single hyphens and text is lowercased.
+        Given 'Hello World Foo', when slugify is applied, 
+        then the result is 'hello-world-foo'.
+        """
+        result = slugify('Hello World Foo')
+        self.assertEqual(result, 'hello-world-foo')
+
+    def test_disallowed_punctuation_is_stripped(self):
+        """
+        Test that punctuation is removed when slugify is applied.
+        Given 'C++ & Python: A Guide!', when slugify is applied,
+        then punctuation is removed and the result is 'c-python-a-guide'.
+        """
+        input_text = 'C++ & Python: A Guide!'
+        result = slugify(input_text)
+        self.assertEqual(result, 'c-python-a-guide')
+
+    def test_slugify_transliterates_unicode_to_ascii_by_default(self):
+        """
+        Test that slugify transliterates Unicode characters to ASCII
+        when allow_unicode=False (the default behavior).
+        Given 'Café Déjà Vu' with accents, the result should be 'cafe-deja-vu'.
+        """
+        input_text = "Café Déjà Vu"
+        result = slugify(input_text, allow_unicode=False)
+        expected = "cafe-deja-vu"
+        self.assertEqual(result, expected)
