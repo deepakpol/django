@@ -443,3 +443,16 @@ class TestUtilsText(SimpleTestCase):
         )
         with override("fr"):
             self.assertEqual("Ajout de article «\xa0My first try\xa0».", s)
+
+    def test_spaces_become_single_hyphens_and_lowercased(self):
+        result = slugify('Hello World Foo')
+        self.assertEqual(result, 'hello-world-foo')
+
+    def test_disallowed_punctuation_is_stripped(self):
+        result = slugify('C++ & Python: A Guide!')
+        self.assertEqual(result, 'c-python-a-guide')
+
+    def test_unicode_transliterated_to_ascii(self):
+        result = slugify('Cafe Deja Vu', allow_unicode=False)
+        self.assertEqual(result, 'cafe-deja-vu')
+
