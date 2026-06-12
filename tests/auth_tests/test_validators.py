@@ -20,6 +20,8 @@ from django.db import models
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.utils import isolate_apps
 from django.utils.html import conditional_escape
+from django.contrib.auth.password_validation import MinimumLengthValidator
+from django.core.exceptions import ValidationError
 
 
 @override_settings(
@@ -182,6 +184,20 @@ class MinimumLengthValidatorTest(SimpleTestCase):
 
         with self.assertRaisesMessage(ValidationError, expected_error % 3) as cm:
             CustomMinimumLengthValidator(min_length=3).validate("12")
+
+    def test_password_shorter_than_minimum_length_is_rejected(self):
+        """
+        Test that a password shorter than the minimum length is rejected.
+        Given a password 'ab12' and MinimumLengthValidator(min_length=8),
+        when validated, then a ValidationError with code 'password_too_short' is raised.
+        """
+        validator = MinimumLengthValidator(min_length=8)
+
+        with self.assertRaises(ValidationError) as cm:
+            validator.validate("ab12")
+
+        self.assertEqual(cm.exception.code, "password_too_short")
+
 
 
 class UserAttributeSimilarityValidatorTest(TestCase):
