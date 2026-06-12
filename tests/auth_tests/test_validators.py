@@ -22,6 +22,7 @@ from django.test.utils import isolate_apps
 from django.utils.html import conditional_escape
 from django.contrib.auth.password_validation import MinimumLengthValidator
 from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import CommonPasswordValidator
 
 
 @override_settings(
@@ -352,6 +353,19 @@ class CommonPasswordValidatorTest(SimpleTestCase):
 
         with self.assertRaisesMessage(ValidationError, expected_error):
             CustomCommonPasswordValidator().validate("godzilla")
+
+    def test_common_password_rejected_with_correct_code(self):
+        """
+        Test that a common password 'password' is rejected by CommonPasswordValidator
+        and raises ValidationError with code 'password_too_common'.
+        """
+        validator = CommonPasswordValidator()
+
+        with self.assertRaises(ValidationError) as cm:
+            validator.validate("password")
+
+        self.assertEqual(cm.exception.code, "password_too_common")
+
 
 
 class NumericPasswordValidatorTest(SimpleTestCase):
