@@ -8,6 +8,7 @@ from django.utils import text
 from django.utils.functional import lazystr
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy, override
+from django.utils.text import slugify
 
 IS_WIDE_BUILD = len("\U0001f4a9") == 1
 
@@ -443,3 +444,32 @@ class TestUtilsText(SimpleTestCase):
         )
         with override("fr"):
             self.assertEqual("Ajout de article «\xa0My first try\xa0».", s)
+
+    def test_spaces_become_hyphens_and_lowercase(self):
+        """
+        Given 'Hello World Foo', when slugify is applied,
+        then the result is 'hello-world-foo'.
+        """
+        result = slugify('Hello World Foo')
+        self.assertEqual(result, 'hello-world-foo')
+
+    def test_slugify_strips_disallowed_punctuation(self):
+        """
+        Test that disallowed punctuation is stripped.
+        Given 'C++ & Python: A Guide!', when slugify is applied,
+        then punctuation is removed and the result is 'c-python-a-guide'.
+        """
+        self.assertEqual(
+            slugify('C++ & Python: A Guide!'),
+            'c-python-a-guide'
+        )
+
+    def test_slugify_unicode_transliteration_to_ascii_default(self):
+        """
+        Unicode is transliterated to ASCII by default.
+        Given 'Cafe Deja Vu' with accents and allow_unicode=False,
+        when slugify is applied, then the result is 'cafe-deja-vu'.
+        """
+        result = slugify("Café Déjà Vu", allow_unicode=False)
+        self.assertEqual(result, "cafe-deja-vu")
+
