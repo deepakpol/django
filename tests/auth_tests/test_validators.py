@@ -20,6 +20,10 @@ from django.db import models
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.utils import isolate_apps
 from django.utils.html import conditional_escape
+from django.contrib.auth.password_validation import MinimumLengthValidator
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import CommonPasswordValidator
+from django.contrib.auth.password_validation import NumericPasswordValidator
 
 
 @override_settings(
@@ -183,6 +187,20 @@ class MinimumLengthValidatorTest(SimpleTestCase):
         with self.assertRaisesMessage(ValidationError, expected_error % 3) as cm:
             CustomMinimumLengthValidator(min_length=3).validate("12")
 
+    def test_password_shorter_than_minimum_length_is_rejected(self):
+        """
+        Test that a password shorter than the minimum length is rejected.
+        Given a password 'ab12' and MinimumLengthValidator(min_length=8),
+        when validated, then a ValidationError with code 'password_too_short' is raised.
+        """
+        validator = MinimumLengthValidator(min_length=8)
+
+        with self.assertRaises(ValidationError) as cm:
+            validator.validate("ab12")
+
+        self.assertEqual(cm.exception.code, "password_too_short")
+
+
 
 class UserAttributeSimilarityValidatorTest(TestCase):
     def test_validate(self):
@@ -337,6 +355,19 @@ class CommonPasswordValidatorTest(SimpleTestCase):
         with self.assertRaisesMessage(ValidationError, expected_error):
             CustomCommonPasswordValidator().validate("godzilla")
 
+    def test_common_password_rejected_with_correct_code(self):
+        """
+        Test that a common password 'password' is rejected by CommonPasswordValidator
+        and raises ValidationError with code 'password_too_common'.
+        """
+        validator = CommonPasswordValidator()
+
+        with self.assertRaises(ValidationError) as cm:
+            validator.validate("password")
+
+        self.assertEqual(cm.exception.code, "password_too_common")
+
+
 
 class NumericPasswordValidatorTest(SimpleTestCase):
     def test_validate(self):
@@ -363,6 +394,19 @@ class NumericPasswordValidatorTest(SimpleTestCase):
 
         with self.assertRaisesMessage(ValidationError, expected_error):
             CustomNumericPasswordValidator().validate("42424242")
+
+    def test_entirely_numeric_password_rejected(self):
+        """
+        Test that an entirely numeric password '48105729' is rejected
+        by NumericPasswordValidator with code 'password_entirely_numeric'.
+        """
+        validator = NumericPasswordValidator()
+
+        with self.assertRaises(ValidationError) as cm:
+            validator.validate("48105729")
+
+        self.assertEqual(cm.exception.code, "password_entirely_numeric")
+
 
 
 class UsernameValidatorsTests(SimpleTestCase):
