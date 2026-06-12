@@ -23,6 +23,7 @@ from django.utils.html import conditional_escape
 from django.contrib.auth.password_validation import MinimumLengthValidator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import CommonPasswordValidator
+from django.contrib.auth.password_validation import NumericPasswordValidator
 
 
 @override_settings(
@@ -393,6 +394,19 @@ class NumericPasswordValidatorTest(SimpleTestCase):
 
         with self.assertRaisesMessage(ValidationError, expected_error):
             CustomNumericPasswordValidator().validate("42424242")
+
+    def test_entirely_numeric_password_rejected(self):
+        """
+        Test that an entirely numeric password '48105729' is rejected
+        by NumericPasswordValidator with code 'password_entirely_numeric'.
+        """
+        validator = NumericPasswordValidator()
+
+        with self.assertRaises(ValidationError) as cm:
+            validator.validate("48105729")
+
+        self.assertEqual(cm.exception.code, "password_entirely_numeric")
+
 
 
 class UsernameValidatorsTests(SimpleTestCase):
